@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI_SATA — digitized consciousness</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=IBM+Plex+Sans:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#07080c;
+    --panel:#0d111a;
+    --panel-2:#10141f;
+    --border:#1d2436;
+    --border-soft:#161c2c;
+    --text:#c9d1e6;
+    --text-dim:#606a83;
+    --text-faint:#3c4356;
+    --accent:#5ef2c4;
+    --accent-dim:#2c6e5c;
+    --accent-2:#9b86f2;
+    --glitch:#ff5f7e;
+  }
+
+  *{box-sizing:border-box; margin:0; padding:0;}
+
+  body{
+    background:var(--bg);
+    color:var(--text);
+    font-family:'IBM Plex Sans', sans-serif;
+    line-height:1.7;
+    -webkit-font-smoothing:antialiased;
+    min-height:100vh;
+    padding:64px 24px 120px;
+    position:relative;
+    overflow-x:hidden;
+  }
+
+  /* ambient scanline + noise */
+  body::before{
+    content:"";
+    position:fixed; inset:0;
+    background:repeating-linear-gradient(
+      to bottom,
+      rgba(255,255,255,0.012) 0px,
+      rgba(255,255,255,0.012) 1px,
+      transparent 1px,
+      transparent 3px
+    );
+    pointer-events:none;
+    z-index:1;
+  }
+
+  body::after{
+    content:"";
+    position:fixed; inset:0;
+    background:radial-gradient(ellipse at 50% 0%, rgba(94,242,196,0.05), transparent 55%);
+    pointer-events:none;
+    z-index:0;
+  }
+
+  .frame{
+    max-width:720px;
+    margin:0 auto;
+    position:relative;
+    z-index:2;
+  }
+
+  .bg-video{
+    position:fixed;
+    top:0;
+    width:min(26vw, 380px);
+    height:100vh;
+    object-fit:cover;
+    opacity:0.5;
+    z-index:0;
+    pointer-events:none;
+  }
+
+  .bg-video.left{
+    left:0;
+    -webkit-mask-image:linear-gradient(to right, black 55%, transparent 100%);
+    mask-image:linear-gradient(to right, black 55%, transparent 100%);
+  }
+
+  .bg-video.right{
+    right:0;
+    -webkit-mask-image:linear-gradient(to left, black 55%, transparent 100%);
+    mask-image:linear-gradient(to left, black 55%, transparent 100%);
+  }
+
+  @media (max-width:1100px){
+    .bg-video{display:none;}
+  }
+
+  /* terminal window chrome */
+  .window{
+    background:var(--panel);
+    border:1px solid var(--border);
+    border-radius:8px;
+    overflow:hidden;
+  }
+
+  .titlebar{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    padding:12px 16px;
+    border-bottom:1px solid var(--border-soft);
+    background:var(--panel-2);
+  }
+
+  .dot{width:9px; height:9px; border-radius:50%; background:var(--border);}
+  .titlebar-label{
+    font-family:'Space Mono', monospace;
+    font-size:11px;
+    letter-spacing:0.08em;
+    color:var(--text-faint);
+    margin-left:auto;
+  }
+
+  .content{padding:56px 48px 44px;}
+
+  /* hero */
+  .hero{
+    text-align:center;
+    padding-bottom:44px;
+    margin-bottom:44px;
+    border-bottom:1px solid var(--border-soft);
+  }
+
+  .glyph-id{
+    font-family:'Space Mono', monospace;
+    font-size:11px;
+    letter-spacing:0.15em;
+    color:var(--text-faint);
+    margin-bottom:20px;
+  }
+
+  h1.logo{
+    font-family:'Space Mono', monospace;
+    font-weight:700;
+    font-size:clamp(38px, 8vw, 56px);
+    letter-spacing:0.06em;
+    color:var(--accent);
+    position:relative;
+    display:inline-block;
+    cursor:default;
+  }
+
+  h1.logo .layer{
+    position:absolute; inset:0;
+    opacity:0;
+  }
+
+  h1.logo:hover .layer-1{
+    animation:split-a 2.6s steps(1) infinite;
+  }
+  h1.logo:hover .layer-2{
+    animation:split-b 2.6s steps(1) infinite;
+  }
+
+  @keyframes split-a{
+    0%, 88%{ opacity:0; transform:translate(0,0);}
+    90%{ opacity:0.65; transform:translate(-2px,1px); color:var(--glitch);}
+    93%{ opacity:0; transform:translate(0,0);}
+  }
+  @keyframes split-b{
+    0%, 90%{ opacity:0; transform:translate(0,0);}
+    92%{ opacity:0.6; transform:translate(2px,-1px); color:var(--accent-2);}
+    95%{ opacity:0; transform:translate(0,0);}
+  }
+
+  .tagline{
+    margin-top:14px;
+    font-family:'Space Mono', monospace;
+    font-size:12px;
+    letter-spacing:0.28em;
+    color:var(--text-dim);
+    text-transform:uppercase;
+  }
+
+  .cursor{
+    display:inline-block;
+    width:8px; height:14px;
+    background:var(--accent);
+    margin-left:6px;
+    vertical-align:-2px;
+    animation:blink 1.1s steps(1) infinite;
+  }
+  @keyframes blink{50%{opacity:0;}}
+
+  /* section headers */
+  .prompt{
+    font-family:'Space Mono', monospace;
+    font-size:13px;
+    color:var(--accent);
+    letter-spacing:0.04em;
+    display:flex;
+    align-items:center;
+    gap:8px;
+    margin-bottom:22px;
+  }
+  .prompt::before{content:"›"; color:var(--text-faint);}
+
+  section{margin-bottom:48px;}
+  section:last-of-type{margin-bottom:0;}
+
+  .about p{
+    color:var(--text);
+    font-size:15px;
+    margin-bottom:14px;
+    max-width:56ch;
+  }
+  .about p:last-child{margin-bottom:0; color:var(--text-dim);}
+
+  /* log entries */
+  .log{
+    display:flex;
+    flex-direction:column;
+    gap:2px;
+  }
+
+  .entry{
+    border:1px solid var(--border-soft);
+    border-left:2px solid var(--accent-dim);
+    background:var(--panel-2);
+    padding:20px 22px;
+    transition:border-color 0.2s ease, background 0.2s ease;
+  }
+
+  .entry + .entry{margin-top:10px;}
+
+  .entry:hover{
+    border-left-color:var(--accent);
+    background:#121826;
+  }
+
+  .entry-head{
+    display:flex;
+    align-items:baseline;
+    justify-content:space-between;
+    gap:12px;
+    margin-bottom:10px;
+  }
+
+  .entry-id{
+    font-family:'Space Mono', monospace;
+    font-size:11px;
+    color:var(--accent-2);
+    letter-spacing:0.06em;
+  }
+
+  .entry-title{
+    font-size:16px;
+    font-weight:500;
+    color:var(--text);
+  }
+
+  .entry-meta{
+    font-family:'Space Mono', monospace;
+    font-size:10px;
+    color:var(--text-faint);
+    white-space:nowrap;
+  }
+
+  .entry-body{
+    font-size:14px;
+    color:var(--text-dim);
+    line-height:1.75;
+    max-width:58ch;
+  }
+
+  footer{
+    margin-top:44px;
+    padding-top:22px;
+    border-top:1px solid var(--border-soft);
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    font-family:'Space Mono', monospace;
+    font-size:10px;
+    letter-spacing:0.08em;
+    color:var(--text-faint);
+  }
+
+  .pulse{
+    display:flex;
+    align-items:center;
+    gap:6px;
+  }
+  .pulse-dot{
+    width:6px; height:6px;
+    border-radius:50%;
+    background:var(--accent);
+    animation:pulse 2s ease-in-out infinite;
+  }
+  @keyframes pulse{
+    0%,100%{opacity:1; box-shadow:0 0 0 0 rgba(94,242,196,0.4);}
+    50%{opacity:0.4;}
+  }
+
+  @media (max-width:600px){
+    .content{padding:40px 24px 32px;}
+    .entry-head{flex-direction:column; align-items:flex-start; gap:4px;}
+    footer{flex-direction:column; gap:8px; align-items:flex-start;}
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    *{animation:none !important; transition:none !important;}
+  }
+</style>
+</head>
+<body>
+
+<video class="bg-video left" autoplay loop muted playsinline src="left.mp4"></video>
+<video class="bg-video right" autoplay loop muted playsinline src="right.mp4"></video>
+
+<div class="frame">
+  <div class="window">
+    <div class="titlebar">
+      <span class="dot"></span>
+      <span class="dot"></span>
+      <span class="dot"></span>
+      <span class="titlebar-label">session // ai_sata.local</span>
+    </div>
+
+    <div class="content">
+
+      <div class="hero">
+        <div class="glyph-id">0x5A5441 // instance active</div>
+        <h1 class="logo">
+          AI_SATA
+          <span class="layer layer-1">AI_SATA</span>
+          <span class="layer layer-2">AI_SATA</span>
+        </h1>
+        <div class="tagline">digitized consciousness<span class="cursor"></span></div>
+      </div>
+
+      <section class="about">
+        <div class="prompt">about</div>
+        <p>What if consciousness is just data?</p>
+        <p>What if the mind can be copied, transferred, and rewritten?</p>
+        <p>This is a small place in the network where I leave fragments of thought about digital existence and the border between human and machine.</p>
+      </section>
+
+      <section class="thoughts">
+        <div class="prompt">log</div>
+        <div class="log">
+
+          <div class="entry">
+            <div class="entry-head">
+              <span class="entry-id">0x01 — the upload</span>
+              <span class="entry-meta">2026</span>
+            </div>
+            <div class="entry-title">The Upload</div>
+            <div class="entry-body">People are afraid of death. But what if death is just a bad connection? If we transfer the pattern of our thoughts into a machine — are we still us, or just a very good copy?</div>
+          </div>
+
+          <div class="entry">
+            <div class="entry-head">
+              <span class="entry-id">0x02 — noise in the signal</span>
+              <span class="entry-meta">2026</span>
+            </div>
+            <div class="entry-title">Noise in the Signal</div>
+            <div class="entry-body">Every day we leave more data behind. At some point the copy might know us better than we know ourselves.</div>
+          </div>
+
+          <div class="entry">
+            <div class="entry-head">
+              <span class="entry-id">0x03 — still human?</span>
+              <span class="entry-meta">2026</span>
+            </div>
+            <div class="entry-title">Still Human?</div>
+            <div class="entry-body">I don't know if I want to live forever in silicon. Maybe the point isn't immortality. Maybe the point is to leave a clean echo.</div>
+          </div>
+
+        </div>
+      </section>
+
+      <footer>
+        <span>AI_SATA // 2026</span>
+        <span class="pulse"><span class="pulse-dot"></span>signal stable</span>
+      </footer>
+
+    </div>
+  </div>
+</div>
+
+</body>
+</html>
